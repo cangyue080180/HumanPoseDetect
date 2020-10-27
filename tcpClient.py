@@ -31,6 +31,7 @@ class TcpClient:
     def send_img(self, img):
         # TODO:可考虑是否需要另起一个线程进行发送来提高性能
         if self.is_room_video_send and not self.is_stop:
+            print('start send image')
             # 图片压缩为jpg格式，节省传输数据量
             # prev = cv2.resize(prev, (0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_NEAREST)
             send_file = str(self.camera_id) + '.jpg'
@@ -39,18 +40,15 @@ class TcpClient:
             # 发送数据包头
             file_size = os.path.getsize(send_file)
             packet_header = struct.pack('<BII', 2, file_size + 4, self.camera_id)
-            try:
-                self.tcp_socket.send(packet_header)
-            except Exception:
-                pass
+
             # 发送图像数据
             with open(send_file, 'rb') as img_file:
-                thread = threading.currentThread()
-                print(f'thread {thread.ident} tcp_send...')
+                send_bytes = img_file.read(file_size)
                 try:
-                    send_bytes = img_file.read(file_size)
-                    self.tcp_socket.send(send_bytes)
-                    print(f'send {len(send_bytes)}')
+                    if self.is_room_video_send:
+                        self.tcp_socket.send(packet_header)
+                        self.tcp_socket.send(send_bytes)
+                        print(f'send {len(send_bytes)}')
                 except Exception as e:
                     print(str(e))
 
@@ -60,9 +58,9 @@ class TcpClient:
         packet_role = struct.pack('<BIB', 3, 1, 2)
         self.tcp_socket.send(packet_role)
 
-        # t = Thread(target=self.__receive, args=())
-        # t.daemon = True
-        # t.start()
+        t = threading.Thread(target=self.__receive, args=())
+        t.daemon = True
+        t.start()
 
     def stop(self):
         self.is_stop = True
@@ -76,9 +74,10 @@ class TcpClient:
                 room_id, video_status = struct.unpack('<IB', self.__socket_receive(5))
                 if self.room_id == room_id:
                     pass
-                    # if video_status == 1:  # 发送此房间图像
-                    #     self.is_room_video_send = True
-                    # else:  # 关闭此房间图像
-                    #     self.is_room_video_send = False
+                    if video_status == 1:  # 发送此房间图像
+                        self.is_room_video_send = True
+                    else:  # 关闭此房间图像
+                        self.is_room_video_send = False
+                    print(f'is_room_video_send {self.is_room_video_send}')
 
         self.tcp_socket.close()

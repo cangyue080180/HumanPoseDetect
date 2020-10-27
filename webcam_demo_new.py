@@ -253,7 +253,6 @@ if __name__ == "__main__":
 
     while True:
         try:
-            pass
             time.sleep(1)
         except KeyboardInterrupt:
             break
