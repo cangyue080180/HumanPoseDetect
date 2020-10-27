@@ -1,7 +1,7 @@
 import socket
 import os
 import struct
-from threading import Thread
+import threading
 import cv2
 
 
@@ -45,13 +45,14 @@ class TcpClient:
                 pass
             # 发送图像数据
             with open(send_file, 'rb') as img_file:
-                print('tcp_send...')
+                thread = threading.currentThread()
+                print(f'thread {thread.ident} tcp_send...')
                 try:
                     send_bytes = img_file.read(file_size)
                     self.tcp_socket.send(send_bytes)
                     print(f'send {len(send_bytes)}')
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(str(e))
 
     def start(self):
         self.is_stop = False
