@@ -125,8 +125,8 @@ def vis_frame_fast(frame, im_res, format='coco'):
         kp_scores = human['kp_score']
         kp_preds = torch.cat((kp_preds, torch.unsqueeze((kp_preds[5,:]+kp_preds[6,:])/2,0)))
         kp_scores = torch.cat((kp_scores, torch.unsqueeze((kp_scores[5,:]+kp_scores[6,:])/2,0)))
-        print(f'kp_preds: {kp_preds}')
-        print(f'kp_scores: {kp_scores}')
+        # print(f'kp_preds: {kp_preds}')
+        # print(f'kp_scores: {kp_scores}')
         # Draw keypoints
         for n in range(kp_scores.shape[0]):
             if kp_scores[n] <= 0.05:
