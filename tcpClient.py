@@ -3,6 +3,7 @@ import os
 import struct
 import threading
 import cv2
+import numpy
 
 
 class TcpClient:
@@ -12,6 +13,8 @@ class TcpClient:
         self.tcp_server_port = server_port
         self.camera_id = camera_id
         self.room_id = room_id
+        # 压缩参数，后面cv2.imencode将会用到，对于jpeg来说，15代表图像质量，越高代表图像质量越好为 0-100，默认95
+        self.encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 30]
 
         self.is_stop = True
         self.is_room_video_send = False
@@ -38,13 +41,12 @@ class TcpClient:
     def send_img(self, img):
         # TODO:可考虑是否需要另起一个线程进行发送来提高性能
         if self.is_room_video_send and not self.is_stop:
-            # 图片压缩为jpg格式，节省传输数据量
-            # prev = cv2.resize(prev, (0, 0), fx=0.5, fy=0.5, interpolation=cv2.INTER_NEAREST)
-            send_file = str(self.camera_id) + '.jpg'
-            cv2.imwrite(send_file, img)
+            result, imgencode = cv2.imencode('.jpg', img, self.encode_param)
+            data = numpy.array(imgencode)
+            send_file = data.tostring()
 
             # 发送图像数据包头
-            file_size = os.path.getsize(send_file)
+            file_size = len(send_file)
             packet_header = struct.pack('<BII', 2, file_size + 4, self.camera_id)
 
             # 发送图像数据
