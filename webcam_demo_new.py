@@ -60,6 +60,22 @@ def aged_status_reset(aged):
     aged.timein = None
 
 
+def aged_status_sync(aged):
+    # 拼接url，参考接口文档
+    aged_today_status__url = Conf.Urls.PoseInfoUrl + "/" + str(aged.agesinfoid)
+    print(f'get {aged_today_status__url}')
+
+    try:
+        aged_status_today = HttpHelper.get_items(aged_today_status__url)
+    except Exception:  # 还没有数据记录
+        return
+    aged.timesit = aged_status_today.timeSit
+    aged.timelie = aged_status_today.timeLie
+    aged.timestand = aged_status_today.timeStand
+    aged.timedown = aged_status_today.timeDown
+    aged.timeother = aged_status_today.timeOther
+
+
 def pose_detect_with_video(aged_id, classidx, parse_pose_demo):
     use_aged = ages[aged_id]
     classidx = int(classidx)
@@ -72,6 +88,8 @@ def pose_detect_with_video(aged_id, classidx, parse_pose_demo):
     use_aged.date = now_date
 
     if parse_pose_demo.is_first_frame:  # 第一帧，开始计时
+        # 从服务器获取当天的状态记录信息，进行本地值的更新，防止状态计时被重置
+        aged_status_sync(use_aged)
         parse_pose_demo.is_first_frame = False
     else:
         last_pose_time = time.time() - parse_pose_demo.last_time  # 上一个状态至今的时间差，单位为s
