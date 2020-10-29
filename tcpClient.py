@@ -49,15 +49,13 @@ class TcpClient:
             file_size = len(send_file)
             packet_header = struct.pack('<BII', 2, file_size + 4, self.camera_id)
 
-            # 发送图像数据
-            with open(send_file, 'rb') as img_file:
-                if self.is_room_video_send:
-                    try:
-                        self.tcp_socket.send(packet_header)
-                        self.tcp_socket.send(img_file.read(file_size))
-                        print(f'send {file_size}')
-                    except OSError as e:
-                        print(f'send_img_with_exception: {str(e)}')
+            if self.is_room_video_send:
+                try:
+                    self.tcp_socket.send(packet_header)
+                    self.tcp_socket.send(send_file)
+                    print(f'send {file_size}')
+                except OSError as e:
+                    print(f'send_img_with_exception: {str(e)}')
 
     def start(self):
         self.is_stop = False
