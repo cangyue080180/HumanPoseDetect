@@ -40,7 +40,7 @@ class WebcamLoader:
         # used to indicate if the thread should be stopped or not
         # self.stream = cv2.VideoCapture('http://ivi.bupt.edu.cn/hls/cctv5phd.m3u8')
         # 扩展功能，添加对视频流的读取功能。
-        #webcam=0
+        print(f'start capture webcam: {webcam}')
         if isinstance(webcam, str):
             self.stream = cv2.VideoCapture(webcam)
         elif isinstance(webcam, int):
@@ -48,6 +48,7 @@ class WebcamLoader:
         else:
             self.stream = None
         assert self.stream.isOpened(), 'Cannot capture source'
+        print(f'capture webcam {webcam} success')
         self.stopped = False
         # initialize the queue used to store frames read from
         # the video file
@@ -75,6 +76,7 @@ class WebcamLoader:
                     (grabbed, frame) = self.stream.read()
                     # if the `grabbed` boolean is `False`, then we have
                     # reached the end of the video file
+                    print(f'read frame,grabbed:{grabbed}')
                     if not grabbed:
                         self.stop()
                         return
