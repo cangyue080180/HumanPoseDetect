@@ -49,9 +49,11 @@ class WebcamLoader:
             self.stream = cv2.VideoCapture(int(webcam))
         else:
             self.stream = None
-        assert self.stream.isOpened(), 'Cannot capture source'
-        print(f'capture webcam {webcam} success')
         self.stopped = False
+        if not self.stream.isOpened():
+            print(f'Cannot capture source {self.webcam}')
+            self.stopped = True
+        print(f'capture webcam {webcam} success')
         # initialize the queue used to store frames read from
         # the video file
         self.batchSize = batchSize
@@ -65,10 +67,14 @@ class WebcamLoader:
             self.stream = cv2.VideoCapture(int(self.webcam))
         else:
             self.stream = None
-        assert self.stream.isOpened(), 'Cannot capture source'
+        if not self.stream.isOpened():
+            print(f'Cannot capture source {self.webcam}')
+            self.stopped = True
         print(f'capture webcam {self.webcam} success')
 
     def start(self):
+        if self.stopped:
+            return
         # start a thread to read frames from the file video stream
         t = Thread(target=self.update, args=())
         t.daemon = True
@@ -102,6 +108,9 @@ class WebcamLoader:
                     orig_img.append(orig_img_k)
                     im_name.append(str(i)+'.jpg')
                     im_dim_list.append(im_dim_list_k)
+
+                if is_disconnet:
+                    break
 
                 with torch.no_grad():
                     # Human Detection
