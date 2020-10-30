@@ -40,6 +40,7 @@ class WebcamLoader:
         # used to indicate if the thread should be stopped or not
         # self.stream = cv2.VideoCapture('http://ivi.bupt.edu.cn/hls/cctv5phd.m3u8')
         # 扩展功能，添加对视频流的读取功能。
+        self.webcam = webcam
         print(f'start capture webcam: {webcam}')
         if isinstance(webcam, str):
             self.stream = cv2.VideoCapture(webcam)
@@ -55,6 +56,17 @@ class WebcamLoader:
         self.batchSize = batchSize
         self.Q = LifoQueue(maxsize=queueSize)
 
+    def reLoadStream(self):
+        print(f'start capture webcam: {self.webcam}')
+        if isinstance(self.webcam, str):
+            self.stream = cv2.VideoCapture(self.webcam)
+        elif isinstance(self.webcam, int):
+            self.stream = cv2.VideoCapture(int(self.webcam))
+        else:
+            self.stream = None
+        assert self.stream.isOpened(), 'Cannot capture source'
+        print(f'capture webcam {self.webcam} success')
+
     def start(self):
         # start a thread to read frames from the file video stream
         t = Thread(target=self.update, args=())
@@ -65,7 +77,8 @@ class WebcamLoader:
     def update(self):
         # keep looping infinitely
         i = 0
-        while True:
+        is_disconnet = False
+        while not self.stopped:
             # otherwise, ensure the queue has room in it
             if not self.Q.full():
                 img = []
@@ -78,8 +91,8 @@ class WebcamLoader:
                     # reached the end of the video file
                     print(f'read frame,grabbed:{grabbed}')
                     if not grabbed:
-                        self.stop()
-                        return
+                        is_disconnet = True
+                        break
                     inp_dim = int(opt.inp_dim)
                     img_k, orig_img_k, im_dim_list_k = prep_frame(frame, inp_dim)
                 
@@ -95,10 +108,14 @@ class WebcamLoader:
 
                     self.Q.put((img, orig_img, im_name, im_dim_list))
                     i = i+1
-
             else:
                 with self.Q.mutex:
                     self.Q.queue.clear()
+        # 视频断线重连
+        if is_disconnet:
+            self.reLoadStream()
+            self.update()
+
     def videoinfo(self):
         # indicate the video info
         fourcc=int(self.stream.get(cv2.CAP_PROP_FOURCC))
