@@ -17,6 +17,7 @@ import json
 import numpy as np
 import sys
 import time
+import datetime
 import torch.multiprocessing as mp
 from multiprocessing import Process
 from multiprocessing import Queue as pQueue
@@ -89,7 +90,8 @@ class WebcamLoader:
                     (grabbed, frame) = self.stream.read()
                     # if the `grabbed` boolean is `False`, then we have
                     # reached the end of the video file
-                    print(f'read frame,grabbed:{grabbed}')
+                    now = datetime.datetime.now().strftime('%H:%M:%S')
+                    print(f'{now} read frame,grabbed:{grabbed}')
                     if not grabbed:
                         is_disconnet = True
                         break
