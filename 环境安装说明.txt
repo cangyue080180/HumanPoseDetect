@@ -1,0 +1,12 @@
+1.安装cuda10.1,以及cudnn,具体方法可以百度
+2.安装Miniconda，或者Anaconda
+3.百度网盘下载环境压缩包pytorch13.zip
+链接：https://pan.baidu.com/s/1q9DN_GE4JkLlZRuLONBdFg 
+提取码：6543 
+复制这段内容后打开百度网盘手机App，操作更方便哦
+4.将pytorch13.zip解压到第二步下载的软件安装路径的envs下面。
+示例：如我安装的miniconda，解压到我的D:\ProgramFiles\Miniconda3\envs下面即可。
+5.安装git
+6.用下面的命令拷贝源码到你的本地
+git clone https://github.com/cangyue080180/HumanPoseDetect.git
+7.打开miniconda,切换环境到pytorch13，输入命令python webcam_demo_new.py运行程序。
