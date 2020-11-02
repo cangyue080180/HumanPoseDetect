@@ -27,7 +27,7 @@ import time
 from pPose_nms import write_json
 
 from align import AlignPoints
-from threading import Thread
+import threading
 import tcpClient
 
 args = opt
@@ -140,7 +140,7 @@ class ParsePoseDemo:
     def start(self):
         # start a thread to read frames from the file video stream
         self.is_stop = False
-        t = Thread(target=self.parse, args=())
+        t = threading.Thread(target=self.parse, args=())
         t.daemon = True
         t.start()
 
@@ -148,6 +148,7 @@ class ParsePoseDemo:
         self.is_stop= True
 
     def parse(self):
+        print(f'ParsePoseDemo_parse_thread: {threading.currentThread().name}')
         print('start parse')
         if not os.path.exists(self.output_path):
             os.mkdir(self.output_path)
@@ -188,7 +189,7 @@ class ParsePoseDemo:
                     writer.save(boxes, scores, hm, pt1, pt2, orig_img, im_name.split('/')[-1])
                     while not writer.result_Q.empty():
                         result = writer.result_Q.get()
-                        print('classidx:', result['result'][0]['class'])
+                        # print('classidx:', result['result'][0]['class'])
 
                         for aged in self.camera_info.roomInfo.agesInfos:
                             if not aged.id in ages.keys():
@@ -204,7 +205,7 @@ class ParsePoseDemo:
                         # 创建或更新PoseInfo数据库记录
                         pose_url = Conf.Urls.PoseInfoUrl + '/UpdateOrCreatePoseInfo'
                         http_result = HttpHelper.create_item(pose_url, ages[aged.id])
-                        print(f'update_poseinfo_http_result: {http_result}')
+                        # print(f'update_poseinfo_http_result: {http_result}')
             except KeyboardInterrupt:
                 break
 

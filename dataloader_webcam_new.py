@@ -21,18 +21,17 @@ import datetime
 import torch.multiprocessing as mp
 from multiprocessing import Process
 from multiprocessing import Queue as pQueue
-from threading import Thread
-# import the Queue class from Python 3
-if sys.version_info >= (3, 0):
-    from queue import Queue, LifoQueue
-# otherwise, import the Queue class for Python 2.7
-else:
-    from Queue import Queue, LifoQueue
+from queue import Queue, LifoQueue
+import threading
 
 if opt.vis_fast:
     from fn import vis_frame_fast as vis_frame
 else:
     from fn import vis_frame
+
+
+def get_time_now():
+    return datetime.datetime.now().strftime('%m-%d %H:%M:%S')
 
 
 class WebcamLoader:
@@ -42,7 +41,7 @@ class WebcamLoader:
         # self.stream = cv2.VideoCapture('http://ivi.bupt.edu.cn/hls/cctv5phd.m3u8')
         # 扩展功能，添加对视频流的读取功能。
         self.webcam = webcam
-        print(f'start capture webcam: {webcam}')
+        print(f'{get_time_now()} start capture webcam: {webcam}')
         if isinstance(webcam, str):
             self.stream = cv2.VideoCapture(webcam)
         elif isinstance(webcam, int):
@@ -53,14 +52,14 @@ class WebcamLoader:
         if not self.stream.isOpened():
             print(f'Cannot capture source {self.webcam}')
             self.stopped = True
-        print(f'capture webcam {webcam} success')
+        print(f'{get_time_now()}capture webcam {webcam} success')
         # initialize the queue used to store frames read from
         # the video file
         self.batchSize = batchSize
         self.Q = LifoQueue(maxsize=queueSize)
 
     def reLoadStream(self):
-        print(f'start capture webcam: {self.webcam}')
+        print(f'{get_time_now()} start capture webcam: {self.webcam}')
         if isinstance(self.webcam, str):
             self.stream = cv2.VideoCapture(self.webcam)
         elif isinstance(self.webcam, int):
@@ -68,20 +67,21 @@ class WebcamLoader:
         else:
             self.stream = None
         if not self.stream.isOpened():
-            print(f'Cannot capture source {self.webcam}')
+            print(f'{get_time_now()} Cannot capture source {self.webcam}')
             self.stopped = True
-        print(f'capture webcam {self.webcam} success')
+        print(f'{get_time_now()}capture webcam {self.webcam} success')
 
     def start(self):
         if self.stopped:
             return
         # start a thread to read frames from the file video stream
-        t = Thread(target=self.update, args=())
+        t = threading.Thread(target=self.update, args=())
         t.daemon = True
         t.start()
         return self
 
     def update(self):
+        print(f'WebcamLoader_update_thread: {threading.currentThread().name}')
         # keep looping infinitely
         i = 0
         is_disconnet = False
@@ -95,10 +95,10 @@ class WebcamLoader:
                 for k in range(self.batchSize):
                     (grabbed, frame) = self.stream.read()
                     # if the `grabbed` boolean is `False`, then we have
-                    # reached the end of the video file
-                    now = datetime.datetime.now().strftime('%H:%M:%S')
-                    print(f'{now} read frame,grabbed:{grabbed}')
+                    # reached the end of the video file or we disconnect
+                    
                     if not grabbed:
+                        print(f'{get_time_now()} read frame,grabbed:{grabbed}')
                         is_disconnet = True
                         break
                     inp_dim = int(opt.inp_dim)
@@ -108,6 +108,9 @@ class WebcamLoader:
                     orig_img.append(orig_img_k)
                     im_name.append(str(i)+'.jpg')
                     im_dim_list.append(im_dim_list_k)
+                
+                if is_disconnet:
+                    break
 
                 if is_disconnet:
                     break
@@ -169,12 +172,13 @@ class DetectionLoader:
 
     def start(self):
         # start a thread to read frames from the file video stream
-        t = Thread(target=self.update, args=())
+        t = threading.Thread(target=self.update, args=())
         t.daemon = True
         t.start()
         return self
 
     def update(self):
+        print(f'DetectionLoader_update_thread: {threading.currentThread().name}')
         # keep looping the whole dataset
         while True:
             img, orig_img, im_name, im_dim_list = self.dataloder.getitem()
@@ -244,12 +248,13 @@ class DetectionProcessor:
 
     def start(self):
         # start a thread to read frames from the file video stream
-        t = Thread(target=self.update, args=())
+        t = threading.Thread(target=self.update, args=())
         t.daemon = True
         t.start()
         return self
 
     def update(self):
+        print(f'DetectionProcessor_update_thread: {threading.currentThread().name}')
         # keep looping the whole dataset
         while True:
             
@@ -306,12 +311,13 @@ class WebcamDetectionLoader:
 
     def start(self):
         # start a thread to read frames from the file video stream
-        t = Thread(target=self.update, args=())
+        t = threading.Thread(target=self.update, args=())
         t.daemon = True
         t.start()
         return self
 
     def update(self):
+        print(f'WebcamDetectionLoader_update_thread: {threading.currentThread().name}')
         # keep looping
         while True:
             img = []
@@ -421,12 +427,13 @@ class DataWriter:
 
     def start(self):
         # start a thread to read frames from the file video stream
-        t = Thread(target=self.update, args=())
+        t = threading.Thread(target=self.update, args=())
         t.daemon = True
         t.start()
         return self
 
     def update(self):
+        print(f'DataWriter_update_thread: {threading.currentThread().name}')
         # keep looping infinitely
         temp_kps=[]
         while True:
@@ -455,8 +462,8 @@ class DataWriter:
 
                     # 发送图像
                     img = orig_img
-                    h, w, c = img.shape
-                    img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
+                    # h, w, c = img.shape
+                    # img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
                     self.tcp_client.send_img(img)
                 else:
                     # location prediction (n, kp, 2) | score prediction (n, kp, 1)
@@ -531,8 +538,8 @@ class DataWriter:
 
                         # 发送图像
                         img = vis_frame(orig_img, result)
-                        h, w, c = img.shape
-                        img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
+                        # h, w, c = img.shape
+                        # img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
                         self.tcp_client.send_img(img)
 
                         if opt.save_img or opt.save_video or opt.vis:
@@ -571,6 +578,7 @@ class DataWriter:
     def len(self):
         # return queue len
         return self.Q.qsize()
+
 
 class Mscoco(data.Dataset):
     def __init__(self, train=True, sigma=1,

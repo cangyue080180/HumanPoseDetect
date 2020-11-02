@@ -4,6 +4,11 @@ import struct
 import threading
 import cv2
 import numpy
+import datetime
+
+
+def get_time_now():
+    return datetime.datetime.now().strftime('%m-%d %H:%M:%S')
 
 
 class TcpClient:
@@ -20,13 +25,13 @@ class TcpClient:
         self.is_room_video_send = False
         self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tcp_socket.connect((self.tcp_server_ip, self.tcp_server_port))
-        print('connection tcp_server success')
+        print(f'{get_time_now()} connection tcp_server success')
 
     def reconnection(self):
-        print('start reconnection')
+        print(f'{get_time_now()} start reconnection')
         self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tcp_socket.connect((self.tcp_server_ip, self.tcp_server_port))
-        print('reconnection tcp_server success')
+        print(f'{get_time_now()} reconnection tcp_server success')
         self.start()
 
     def __socket_receive(self, data_len):
@@ -53,7 +58,7 @@ class TcpClient:
                 try:
                     self.tcp_socket.send(packet_header)
                     self.tcp_socket.send(send_file)
-                    print(f'send {file_size}')
+                    # print(f'send {file_size}')
                 except OSError as e:
                     print(f'send_img_with_exception: {str(e)}')
 
@@ -72,6 +77,7 @@ class TcpClient:
         self.is_stop = True
 
     def __receive(self):
+        print(f'tcp_recv_thread: {threading.currentThread().name}')
         # 等待接收图像传输命令
         is_except = False
         while not self.is_stop:
@@ -85,7 +91,7 @@ class TcpClient:
                             self.is_room_video_send = True
                         else:  # 关闭此房间图像
                             self.is_room_video_send = False
-                        print(f'is_video_send: {self.is_room_video_send}')
+                        print(f'{get_time_now()} is_video_send: {self.is_room_video_send}')
             except ConnectionError:
                 is_except = True
                 break
@@ -95,7 +101,7 @@ class TcpClient:
             try:
                 self.tcp_socket.close()
             except ConnectionError:
-                print('close last socket with exception')
+                print(f'{get_time_now()} close last socket with exception')
             self.reconnection()
         else:
             self.tcp_socket.close()
