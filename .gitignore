@@ -2,6 +2,7 @@
 #custom
 *.jpg
 *.avi
+*.mp4
 models/
 ### Python template
 # Byte-compiled / optimized / DLL files

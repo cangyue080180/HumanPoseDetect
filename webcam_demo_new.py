@@ -229,7 +229,7 @@ if __name__ == "__main__":
     pose_model.cuda()
     pose_model.eval()
     pos_reg_model = NeuralNet(17 * 3 * 9).cuda()
-    pos_reg_model.load_state_dict(torch.load('.\\42_model.ckpt'))
+    pos_reg_model.load_state_dict(torch.load('./42_model.ckpt'))
     pos_reg_model.eval()
 
     # 拼接url，参考接口文档
