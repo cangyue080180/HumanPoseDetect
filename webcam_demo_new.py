@@ -241,7 +241,7 @@ if __name__ == "__main__":
     print(f'current_server.camera_count: {len(current_server.cameraInfos)}')
 
     for camera in current_server.cameraInfos:  # 遍历本服务器需要处理的摄像头
-        tcpClient_instance = tcpClient.TcpClient('154.8.225.243', 8008, camera.id, camera.roomInfoId)
+        tcpClient_instance = tcpClient.TcpClient('127.0.0.1', 8008, camera.id, camera.roomInfoId)
         tcpClient_instance.start()
 
         print('start new ParsePoseDemo')
