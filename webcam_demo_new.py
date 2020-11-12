@@ -24,11 +24,13 @@ import clientdemo.Conf as Conf
 from clientdemo.DataModel import *
 import clientdemo.HttpHelper as HttpHelper
 import time
+import datetime
 from pPose_nms import write_json
 
 from align import AlignPoints
 import threading
 import tcpClient
+import sched
 
 args = opt
 args.dataset = 'coco'
@@ -61,6 +63,11 @@ def aged_status_reset(aged):
 
 
 def aged_status_sync(aged):
+    '''
+    读取数据库中该用户的数据记录赋值为初始值
+    :param aged: PoseInfo对象实例
+    :return: None
+    '''
     # 拼接url，参考接口文档
     aged_today_status__url = Conf.Urls.PoseInfoUrl + "/" + str(aged.agesinfoid)
     print(f'get {aged_today_status__url}')
@@ -76,37 +83,63 @@ def aged_status_sync(aged):
     aged.timeother = aged_status_today.timeOther
 
 
-def pose_detect_with_video(aged_id, classidx, parse_pose_demo):
+def date_compare(date1, date2, fmt='%Y-%m-%d') -> bool:
+    """
+    比较两个真实日期之间的大小，date1 > date2 则返回True
+    :param date1:
+    :param date2:
+    :param fmt:
+    :return:
+    """
+    zero = datetime.datetime.fromtimestamp(0)
+
+    try:
+        d1 = datetime.datetime.strptime(str(date1), fmt)
+    except:
+        d1 = zero
+
+    try:
+        d2 = datetime.datetime.strptime(str(date2), fmt)
+    except:
+        d2 = zero
+
+    return d1 > d2
+
+
+def pose_detect_with_video(aged_id, classidx, parse_pose_demo_instance):
     use_aged = ages[aged_id]
     classidx = int(classidx)
 
     # detect if a new day come
     now_date = time.strftime('%Y-%m-%dT00:00:00', time.localtime())
-    if int(now_date[8:10]) > int(use_aged.date[8:10]):  # a new day
+    if date_compare(now_date[:10], use_aged.date[:10]):  # a new day
         aged_status_reset(use_aged)
-        parse_pose_demo.is_first_frame = True
-    use_aged.date = now_date
+        parse_pose_demo_instance.is_first_frame = True
+        use_aged.date = now_date
 
-    if parse_pose_demo.is_first_frame:  # 第一帧，开始计时
+    if parse_pose_demo_instance.is_first_frame:  # 第一帧，开始计时
         # 从服务器获取当天的状态记录信息，进行本地值的更新，防止状态计时被重置
         aged_status_sync(use_aged)
-        parse_pose_demo.is_first_frame = False
+        parse_pose_demo_instance.is_first_frame = False
     else:
-        last_pose_time = time.time() - parse_pose_demo.last_time  # 上一个状态至今的时间差，单位为s
+        last_pose_time = time.time() - parse_pose_demo_instance.last_time  # 上一个状态至今的时间差，单位为s
         if use_aged.status == PoseStatus.Sit.value:
             use_aged.timesit += last_pose_time
-            use_aged.timesit = int(float(use_aged.timesit))
-        elif use_aged.status == PoseStatus.Other.value:
-            use_aged.timeother += last_pose_time
-            use_aged.timeother = int(float(use_aged.timeother))
+        elif use_aged.status == PoseStatus.Down.value:
+            use_aged.timedown += last_pose_time
+        elif use_aged.status == PoseStatus.Lie.value:
+            use_aged.timelie += last_pose_time
         elif use_aged.status == PoseStatus.Stand.value:
             use_aged.timestand += last_pose_time
-            use_aged.timestand = int(float(use_aged.timestand))
         else:
             use_aged.timeother += last_pose_time
-            use_aged.timeother = int(float(use_aged.timeother))
 
-    parse_pose_demo.last_time = time.time()
+    parse_pose_demo_instance.last_time = time.time()
+    is_new_action = False
+    if not classidx == use_aged.status:
+        # 说明发生了新的动作
+        is_new_action = True
+
     if classidx == 0:
         use_aged.status = PoseStatus.Sit.value
     elif classidx == 1:
@@ -115,6 +148,13 @@ def pose_detect_with_video(aged_id, classidx, parse_pose_demo):
         use_aged.status = PoseStatus.Stand.value
     else:
         use_aged.status = PoseStatus.Other.value
+
+    if is_new_action:
+        now_date_time = time.strftime('%Y-%m-%dTHH:MM:SS', time.localtime())
+        temp_detail_pose_info = DetailPoseInfo(agesInfoId=aged_id, dateTime=now_date_time, status=use_aged.status)
+        # 写数据记录到数据库表DetaiPoseInfo
+        detail_pose_url = Conf.Urls.DetailPoseInfoUrl
+        http_result = HttpHelper.create_item(detail_pose_url, temp_detail_pose_info)
 
     # 判断当前状态是否需求报警
     if use_aged.status == PoseStatus.Down.value:  # TODO：这里的给值是不对的，需要赋予识别服务的对应的需要报警的状态值
@@ -202,16 +242,31 @@ class ParsePoseDemo:
                                 pose_detect_with_video(aged.id, float(result['result'][0]['class']), self)
 
                             break  # TODO：目前只考虑每个房间只有一个人的情况，所有目前一次就跳出了循环
-                        # 创建或更新PoseInfo数据库记录
-                        pose_url = Conf.Urls.PoseInfoUrl + '/UpdateOrCreatePoseInfo'
-                        http_result = HttpHelper.create_item(pose_url, ages[aged.id])
-                        # print(f'update_poseinfo_http_result: {http_result}')
             except KeyboardInterrupt:
                 break
 
         while (writer.running()):
             pass
         writer.stop()
+
+
+def write_database():
+    """
+    每1秒更新一次数据库表PoseInfo的记录信息
+    :return:
+    """
+    pose_url = Conf.Urls.PoseInfoUrl + '/UpdateOrCreatePoseInfo'
+
+    for aged in ages:
+        temp_pose_info = PoseInfo(agesInfoId=aged.id, date=aged.date,
+                                  timeStand=int(float(aged.timestand)),
+                                  timeSit=int(float(aged.timesit)),
+                                  timeLie=int(float(aged.timelie)),
+                                  timeDown=int(float(aged.timedown)),
+                                  timeOther=int(float(aged.timeother))
+                                  )
+        http_result = HttpHelper.create_item(pose_url, temp_pose_info)
+    scheduler.enter(1, 0, write_database, ())
 
 
 ages = {}  # 老人字典
@@ -240,6 +295,10 @@ if __name__ == "__main__":
     # print(current_server)
     print(f'current_server.camera_count: {len(current_server.cameraInfos)}')
 
+    # 定时调度来更新数据库
+    scheduler = sched.scheduler(time.time, time.sleep)
+    scheduler.enter(1, 0, write_database, ())
+
     for camera in current_server.cameraInfos:  # 遍历本服务器需要处理的摄像头
         tcpClient_instance = tcpClient.TcpClient('127.0.0.1', 8008, camera.id, camera.roomInfoId)
         tcpClient_instance.start()
@@ -250,11 +309,7 @@ if __name__ == "__main__":
         temp_task_instance.start()
         pose_parse_instance_list.append(temp_task_instance)
 
-    while True:
-        try:
-            time.sleep(1)
-        except KeyboardInterrupt:
-            break
+    scheduler.run()
 
     for instance in pose_parse_instance_list:
         instance.stop()

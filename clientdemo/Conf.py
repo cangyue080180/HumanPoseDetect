@@ -9,3 +9,4 @@ class Urls:
     RoomInfoUrl = "http://"+__ip_and_port+"/api/RoomInfoes"
     ServerInfoUrl = "http://"+__ip_and_port+"/api/ServerInfoes"
     CameraINfoUrl = "http://"+__ip_and_port+"/api/CameraInfoes"
+    DetailPoseInfoUrl = "http://"+__ip_and_port+"/api/DetailPoseInfoes"

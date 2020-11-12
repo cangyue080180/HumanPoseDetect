@@ -45,6 +45,13 @@ class PoseInfo:
         self.status = status
 
 
+class DetailPoseInfo:
+    def __init__(self, agesInfoId, dateTime, status=None):
+        self.agesInfoId = agesInfoId
+        self.dateTime = dateTime  # formart is "2020_08_05T08:12:34"
+        self.status = status
+
+
 class PoseStatus(Enum):
     Stand = 0
     Sit = 1
