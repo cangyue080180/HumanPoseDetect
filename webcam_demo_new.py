@@ -83,36 +83,13 @@ def aged_status_sync(aged):
     aged.timeother = aged_status_today.timeOther
 
 
-def date_compare(date1, date2, fmt='%Y-%m-%d') -> bool:
-    """
-    比较两个真实日期之间的大小，date1 > date2 则返回True
-    :param date1:
-    :param date2:
-    :param fmt:
-    :return:
-    """
-    zero = datetime.datetime.fromtimestamp(0)
-
-    try:
-        d1 = datetime.datetime.strptime(str(date1), fmt)
-    except:
-        d1 = zero
-
-    try:
-        d2 = datetime.datetime.strptime(str(date2), fmt)
-    except:
-        d2 = zero
-
-    return d1 > d2
-
-
 def pose_detect_with_video(aged_id, classidx, parse_pose_demo_instance):
     use_aged = ages[aged_id]
     classidx = int(classidx)
 
     # detect if a new day come
     now_date = time.strftime('%Y-%m-%dT00:00:00', time.localtime())
-    if date_compare(now_date[:10], use_aged.date[:10]):  # a new day
+    if not now_date == use_aged.date:  # a new day
         aged_status_reset(use_aged)
         parse_pose_demo_instance.is_first_frame = True
         use_aged.date = now_date
