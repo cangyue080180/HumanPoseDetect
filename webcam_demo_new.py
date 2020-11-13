@@ -234,7 +234,9 @@ def write_database():
     pose_url = Conf.Urls.PoseInfoUrl + '/UpdateOrCreatePoseInfo'
 
     for aged in ages.values():
-        temp_pose_info = PoseInfo(agesInfoId=aged.agesinfoid, date=aged.date,
+        temp_pose_info = PoseInfo(agesInfoId=aged.agesinfoid,
+                                  date=aged.date,
+                                  dateTime=aged.datetime,
                                   timeStand=int(float(aged.timestand)),
                                   timeSit=int(float(aged.timesit)),
                                   timeLie=int(float(aged.timelie)),
