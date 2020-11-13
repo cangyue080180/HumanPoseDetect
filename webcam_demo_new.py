@@ -112,33 +112,32 @@ def pose_detect_with_video(aged_id, classidx, parse_pose_demo_instance):
             use_aged.timeother += last_pose_time
 
     parse_pose_demo_instance.last_time = time.time()
-    is_new_action = False
-    if not classidx == use_aged.status:
-        # 说明发生了新的动作
-        is_new_action = True
 
     if classidx == 0:
-        use_aged.status = PoseStatus.Sit.value
+        now_status = PoseStatus.Sit.value
     elif classidx == 1:
-        use_aged.status = PoseStatus.Other.value
+        now_status = PoseStatus.Other.value
     elif classidx == 2:
-        use_aged.status = PoseStatus.Stand.value
+        now_status = PoseStatus.Stand.value
     else:
-        use_aged.status = PoseStatus.Other.value
+        now_status = PoseStatus.Other.value
 
-    if is_new_action:
-        now_date_time = time.strftime('%Y-%m-%dTHH:MM:SS', time.localtime())
-        temp_detail_pose_info = DetailPoseInfo(agesInfoId=aged_id, dateTime=now_date_time, status=use_aged.status)
-        # 写数据记录到数据库表DetaiPoseInfo
-        detail_pose_url = Conf.Urls.DetailPoseInfoUrl
-        http_result = HttpHelper.create_item(detail_pose_url, temp_detail_pose_info)
+    now_date_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+    if not now_status == use_aged.status:  # 新的行为发生
+        if not now_date_time == use_aged.datetime:  # 根据实际情况，每秒只记录一次状态更改操作
+            temp_detail_pose_info = DetailPoseInfo(agesInfoId=aged_id, dateTime=now_date_time, status=now_status)
+            # 写数据记录到数据库表DetaiPoseInfo
+            detail_pose_url = Conf.Urls.DetailPoseInfoUrl
+            http_result = HttpHelper.create_item(detail_pose_url, temp_detail_pose_info)
+    use_aged.datetime = now_date_time
 
     # 判断当前状态是否需求报警
-    if use_aged.status == PoseStatus.Down.value:  # TODO：这里的给值是不对的，需要赋予识别服务的对应的需要报警的状态值
+    if now_status == PoseStatus.Down.value:  # TODO：这里的给值是不对的，需要赋予识别服务的对应的需要报警的状态值
         use_aged.isalarm = True
     else:
         use_aged.isalarm = False
 
+    use_aged.status = now_status
 
 class ParsePoseDemo:
     def __init__(self, camera, out_video_path, detbatch, pose_model, pos_reg_model, tcp_client, save_video=False):
@@ -211,7 +210,7 @@ class ParsePoseDemo:
                         for aged in self.camera_info.roomInfo.agesInfos:
                             if not aged.id in ages.keys():
                                 ages[aged.id] = PoseInfo(agesInfoId=aged.id,
-                                                         date=time.strftime('%Y-%m-%dT00:00:00', time.localtime()),
+                                                         date=time.strftime('%Y-%m-%dT00:00:00', time.localtime()), dateTime=time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
                                                          timeStand=0, timeSit=0, timeLie=0, timeDown=0, timeOther=0)
                             if len(result['result']) > 0:
                                 # 更新被监护对象各种状态的时间值

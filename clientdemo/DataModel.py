@@ -30,11 +30,12 @@ class CameraInfo:
 
 
 class PoseInfo:
-    def __init__(self, agesInfoId, date, timeStand=0, timeSit=0, timeLie=0, timeDown=0, timeOther=0, timeIn=None, isAlarm=False,
-                 status=None, agesInfo=None,):
+    def __init__(self, agesInfoId, date, dateTime, timeStand=0, timeSit=0, timeLie=0, timeDown=0, timeOther=0, timeIn=None, isAlarm=False,
+                 status=None, agesInfo=None):
         self.agesinfoid = agesInfoId
         self.agesinfo = agesInfo
         self.date = date  # formart is "2020_08_05T00:00:00"
+        self.datetime = dateTime
         self.timestand = timeStand
         self.timesit = timeSit
         self.timelie = timeLie
