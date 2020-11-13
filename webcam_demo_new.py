@@ -234,13 +234,15 @@ def write_database():
     """
     pose_url = Conf.Urls.PoseInfoUrl + '/UpdateOrCreatePoseInfo'
 
-    for aged in ages:
-        temp_pose_info = PoseInfo(agesInfoId=aged.id, date=aged.date,
+    for aged in ages.values():
+        temp_pose_info = PoseInfo(agesInfoId=aged.agesinfoid, date=aged.date,
                                   timeStand=int(float(aged.timestand)),
                                   timeSit=int(float(aged.timesit)),
                                   timeLie=int(float(aged.timelie)),
                                   timeDown=int(float(aged.timedown)),
-                                  timeOther=int(float(aged.timeother))
+                                  timeOther=int(float(aged.timeother)),
+                                  isAlarm=aged.isalarm,
+                                  status=aged.status
                                   )
         http_result = HttpHelper.create_item(pose_url, temp_pose_info)
     scheduler.enter(1, 0, write_database, ())
