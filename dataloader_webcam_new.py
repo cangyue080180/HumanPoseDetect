@@ -462,8 +462,10 @@ class DataWriter:
 
                     # 发送图像
                     img = orig_img
-                    # h, w, c = img.shape
-                    # img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
+                    h, w, c = img.shape
+                    img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
+                    #  绘制床的位置矩形
+                    cv2.rectangle(img, (0, 230), (650, 530), (0, 255, 0), 1)
                     self.tcp_client.send_img(img)
                 else:
                     # location prediction (n, kp, 2) | score prediction (n, kp, 1)
@@ -540,6 +542,8 @@ class DataWriter:
                         img = vis_frame(orig_img, result)
                         # h, w, c = img.shape
                         # img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
+                        #  绘制床的位置矩形
+                        cv2.rectangle(img, (0, 230), (650, 530), (0, 255, 0), 1)
                         self.tcp_client.send_img(img)
 
                         if opt.save_img or opt.save_video or opt.vis:

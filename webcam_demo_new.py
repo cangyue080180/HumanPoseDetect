@@ -83,7 +83,7 @@ def aged_status_sync(aged):
     aged.timeother = aged_status_today.timeOther
 
 
-def pose_detect_with_video(aged_id, classidx, parse_pose_demo_instance):
+def pose_detect_with_video(aged_id, classidx,human_box, parse_pose_demo_instance):
     use_aged = ages[aged_id]
     classidx = int(classidx)
 
@@ -116,9 +116,11 @@ def pose_detect_with_video(aged_id, classidx, parse_pose_demo_instance):
     if classidx == 0:
         now_status = PoseStatus.Sit.value
     elif classidx == 1:
-        now_status = PoseStatus.Other.value
+        now_status = PoseStatus.Lie.value
     elif classidx == 2:
         now_status = PoseStatus.Stand.value
+    elif classidx == 3:
+        now_status = PoseStatus.Down.value
     else:
         now_status = PoseStatus.Other.value
 
@@ -131,8 +133,14 @@ def pose_detect_with_video(aged_id, classidx, parse_pose_demo_instance):
             http_result = HttpHelper.create_item(detail_pose_url, temp_detail_pose_info)
     use_aged.datetime = now_date_time
 
+    is_outer_chuang=False
+    chuang_x_min,chuang_y_min,chuang_x_max,chuang_y_max=0,230,650,530
+    xmin,ymin,xmax,ymax=human_box[0],human_box[1],human_box[2],human_box[3]
+    if xmin>chuang_x_max or ymin>chuang_y_max or xmax<chuang_x_min or ymax<chuang_y_min:
+        is_outer_chuang=True
+
     # 判断当前状态是否需求报警
-    if now_status == PoseStatus.Down.value:  # TODO：这里的给值是不对的，需要赋予识别服务的对应的需要报警的状态值
+    if now_status == PoseStatus.Down.value and is_outer_chuang:  # TODO：这里的给值是不对的，需要赋予识别服务的对应的需要报警的状态值
         use_aged.isalarm = True
     else:
         use_aged.isalarm = False
@@ -215,7 +223,8 @@ class ParsePoseDemo:
                             if len(result['result']) > 0:
                                 # 更新被监护对象各种状态的时间值
                                 # TODO: 未检测到人的时候也应该更新数据库，只不过状态为NONE
-                                pose_detect_with_video(aged.id, float(result['result'][0]['class']), self)
+                                human_first = result['result'][0]
+                                pose_detect_with_video(aged.id, float(human_first['class']),human_first['bbox'], self)
 
                             break  # TODO：目前只考虑每个房间只有一个人的情况，所有目前一次就跳出了循环
             except KeyboardInterrupt:
