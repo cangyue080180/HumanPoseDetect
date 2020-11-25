@@ -466,7 +466,8 @@ class DataWriter:
                     h, w, c = img.shape
                     img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
                     #  绘制床的位置矩形
-                    cv2.rectangle(img, (conf.bed_min_x, conf.bed_min_y), (conf.bed_max_x, conf.bed_max_y), (0, 255, 0), 1)
+                    cv2.rectangle(img, (conf.Urls.bed_min_x, conf.Urls.bed_min_y),
+                                  (conf.Urls.bed_max_x, conf.Urls.bed_max_y), (0, 255, 0), 1)
                     self.tcp_client.send_img(img)
                 else:
                     # location prediction (n, kp, 2) | score prediction (n, kp, 1)
@@ -518,7 +519,7 @@ class DataWriter:
                         # h, w, c = img.shape
                         # img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
                         #  绘制床的位置矩形
-                        cv2.rectangle(img, (conf.bed_min_x, conf.bed_min_y), (conf.bed_max_x, conf.bed_max_y), (0, 255, 0), 1)
+                        cv2.rectangle(img, (conf.Urls.bed_min_x, conf.Urls.bed_min_y), (conf.Urls.bed_max_x, conf.Urls.bed_max_y), (0, 255, 0), 1)
                         self.tcp_client.send_img(img)
 
                         if opt.save_img or opt.save_video or opt.vis:
