@@ -23,6 +23,7 @@ from multiprocessing import Process
 from multiprocessing import Queue as pQueue
 from queue import Queue, LifoQueue
 import threading
+import clientdemo.Conf as conf
 
 if opt.vis_fast:
     from fn import vis_frame_fast as vis_frame
@@ -465,7 +466,7 @@ class DataWriter:
                     h, w, c = img.shape
                     img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
                     #  绘制床的位置矩形
-                    cv2.rectangle(img, (0, 230), (650, 530), (0, 255, 0), 1)
+                    cv2.rectangle(img, (conf.bed_min_x, conf.bed_min_y), (conf.bed_max_x, conf.bed_max_y), (0, 255, 0), 1)
                     self.tcp_client.send_img(img)
                 else:
                     # location prediction (n, kp, 2) | score prediction (n, kp, 1)
@@ -474,33 +475,7 @@ class DataWriter:
                         hm_data, pt1, pt2, opt.inputResH, opt.inputResW, opt.outputResH, opt.outputResW)
 
                     result = pose_nms(boxes, scores, preds_img, preds_scores)
-                    #print(len(result))
-                    #print(boxes.shape)
-                    # result=[]
-                    # if preds_img.shape[0]>0:
-                    #     for re in range(preds_img.shape[0]):
-                    #         pos = preds_img[re].unsqueeze(0).numpy()
-                    #         pos = self.aligner.align_points(pos)[0]
-                    #         pos = (pos[..., :2] - 129) / 255
-                    #         pos = torch.FloatTensor(pos)
-                    #
-                    #         kp = torch.cat((pos, preds_scores[re].unsqueeze(1)), 1)
-                    #         kp = kp.unsqueeze(0)
-                    #         kp = kp.reshape([1, -1]).cuda()
-                    #         kp = kp.repeat(9, 1).reshape(1, -1)
-                    #         outputs = self.pos_reg_model(kp)
-                    #         _, preds = torch.max(outputs, 1)
-                    #         classidx = preds.cpu()
-                    #         result.append({'class':str(float(classidx)),
-                    #                        'keypoints':preds_img[re],
-                    #                        'kp_score':preds_scores[re].unsqueeze(1),
-                    #                        'bbox':boxes[re]
-                    #                        })
-                    #     # print(preds)
-                    #     result = {
-                    #         'imgname': im_name,
-                    #         'result': result
-                    #     }
+
                     if len(result) > 0:
                         pos = result[0]['keypoints'].unsqueeze(0).numpy()
                         pos = self.aligner.align_points(pos)[0]
@@ -543,7 +518,7 @@ class DataWriter:
                         # h, w, c = img.shape
                         # img = cv2.resize(img, (int(w / 2), int(h / 2)), interpolation=cv2.INTER_CUBIC)
                         #  绘制床的位置矩形
-                        cv2.rectangle(img, (0, 230), (650, 530), (0, 255, 0), 1)
+                        cv2.rectangle(img, (conf.bed_min_x, conf.bed_min_y), (conf.bed_max_x, conf.bed_max_y), (0, 255, 0), 1)
                         self.tcp_client.send_img(img)
 
                         if opt.save_img or opt.save_video or opt.vis:
