@@ -139,11 +139,11 @@ def pose_detect_with_video(aged_id, classidx,human_box, parse_pose_demo_instance
     if xmin>chuang_x_max or ymin>chuang_y_max or xmax<chuang_x_min or ymax<chuang_y_min:
         is_outer_chuang=True
 
+    use_aged.isalarm = False
     # 判断当前状态是否需求报警
-    if now_status == PoseStatus.Down.value and is_outer_chuang:  # TODO：这里的给值是不对的，需要赋予识别服务的对应的需要报警的状态值
-        use_aged.isalarm = True
-    else:
-        use_aged.isalarm = False
+    if is_outer_chuang:  # TODO：这里的给值是不对的，需要赋予识别服务的对应的需要报警的状态值
+        if now_status == PoseStatus.Down.value or now_status == PoseStatus.Lie.value:
+            use_aged.isalarm = True
 
     use_aged.status = now_status
 
