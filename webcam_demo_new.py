@@ -83,6 +83,12 @@ def aged_status_sync(aged):
     aged.timeother = aged_status_today.timeOther
 
 
+def tensor_to_value(tensor_item):
+    if isinstance(tensor_item,torch.Tensor):
+        tensor_item = tensor_item.item()
+    return tensor_item
+
+
 def pose_detect_with_video(aged_id, classidx,human_box, parse_pose_demo_instance):
     use_aged = ages[aged_id]
     classidx = int(classidx)
@@ -135,7 +141,8 @@ def pose_detect_with_video(aged_id, classidx,human_box, parse_pose_demo_instance
 
     is_outer_chuang=False
     chuang_x_min,chuang_y_min,chuang_x_max,chuang_y_max=0,230,650,530
-    xmin,ymin,xmax,ymax=human_box[0],human_box[1],human_box[2],human_box[3]
+    #  因为床的矩形坐标是在原图压缩1/2之后的值，所以下面的值也需要压缩1/2
+    xmin,ymin,xmax,ymax=int(human_box[0]/2),int(human_box[1]/2),int(human_box[2]/2),int(human_box[3]/2)
     if xmin>chuang_x_max or ymin>chuang_y_max or xmax<chuang_x_min or ymax<chuang_y_min:
         is_outer_chuang=True
 
