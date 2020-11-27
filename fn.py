@@ -208,8 +208,8 @@ def vis_frame(frame, im_res, format='coco'):
             #cv2.putText(img, 'stand', (int(xmin / 2) - 10, int(ymin / 2) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7,[255, 0, 255], 1)
         elif int(float(human['class'])) == 3:
             img = paint_chinese_opencv(img,'地上',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
-        else:
-            img = paint_chinese_opencv(img,'其他',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
+        # else:
+        #     img = paint_chinese_opencv(img,'其他',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
             #cv2.putText(img, 'other', (int(xmin / 2) - 10, int(ymin / 2) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7,[255, 0, 255], 1)
         cv2.rectangle(img,(int(bbox[0]/2),int(bbox[1]/2)),(int(bbox[2]/2),int(bbox[3]/2)),(255,255,0),2)
         #set box mask
