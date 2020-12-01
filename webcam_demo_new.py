@@ -139,19 +139,28 @@ def pose_detect_with_video(aged_id, classidx,human_box, parse_pose_demo_instance
             http_result = HttpHelper.create_item(detail_pose_url, temp_detail_pose_info)
     use_aged.datetime = now_date_time
 
-    is_outer_chuang=False
-    #  因为床的矩形坐标是在原图压缩1/2之后的值，所以下面的值也需要压缩1/2
-    xmin,ymin,xmax,ymax=int(human_box[0]/2),int(human_box[1]/2),int(human_box[2]/2),int(human_box[3]/2)
-    if xmin>Conf.Urls.bed_max_x or ymin>Conf.Urls.bed_max_y or xmax<Conf.Urls.bed_min_x or ymax<Conf.Urls.bed_min_y:
-        is_outer_chuang=True
+    if parse_pose_demo_instance.camera_info.isUseSafeRegion:
+        is_outer_chuang = False
+        #  因为床的矩形坐标是在原图压缩1/2之后的值，所以下面的值也需要压缩1/2
+        xmin, ymin, xmax, ymax = int(human_box[0] / 2), int(human_box[1] / 2), int(human_box[2] / 2), int(
+            human_box[3] / 2)
+        if xmin > parse_pose_demo_instance.camera_info.rightBottomPointX \
+                or ymin > parse_pose_demo_instance.camera_info.rightBottomPointY\
+                or xmax < parse_pose_demo_instance.camera_info.leftTopPointX\
+                or ymax < parse_pose_demo_instance.camera_info.leftTopPointY:
+            is_outer_chuang = True
 
-    use_aged.isalarm = False
-    # 判断当前状态是否需求报警
-    if is_outer_chuang:  # TODO：这里的给值是不对的，需要赋予识别服务的对应的需要报警的状态值
-        if now_status == PoseStatus.Down.value or now_status == PoseStatus.Lie.value:
+        use_aged.isalarm = False
+        # 判断当前状态是否需求报警
+        if is_outer_chuang:
+            if now_status == PoseStatus.Down.value or now_status == PoseStatus.Lie.value:
+                use_aged.isalarm = True
+    else:
+        if now_status == PoseStatus.Down.value:  # TODO：这里的给值是不对的，需要赋予识别服务的对应的需要报警的状态值
             use_aged.isalarm = True
 
     use_aged.status = now_status
+
 
 class ParsePoseDemo:
     def __init__(self, camera, out_video_path, detbatch, pose_model, pos_reg_model, tcp_client, save_video=False):
@@ -265,6 +274,7 @@ def write_database():
 
 
 ages = {}  # 老人字典
+cameras = {}  # 摄像头字典
 pose_parse_instance_list = []
 # 获取或设置本机IP地址信息
 local_ip = '192.168.1.60'

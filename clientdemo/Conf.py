@@ -10,7 +10,3 @@ class Urls:
     ServerInfoUrl = "http://"+__ip_and_port+"/api/ServerInfoes"
     CameraINfoUrl = "http://"+__ip_and_port+"/api/CameraInfoes"
     DetailPoseInfoUrl = "http://"+__ip_and_port+"/api/DetailPoseInfoes"
-    bed_min_x = 0
-    bed_min_y = 230
-    bed_max_x = 650
-    bed_max_y = 530

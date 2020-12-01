@@ -18,7 +18,9 @@ class AgesInfo:
 
 
 class CameraInfo:
-    def __init__(self, id, ipAddress, videoAddress, serverInfoId, roomInfoId, serverInfo=None, factoryInfo=None, roomInfo=None):
+    def __init__(self, id, ipAddress, videoAddress, serverInfoId, roomInfoId,
+                 isUseSafeRegion=False,leftTopPointX=0,leftTopPointY=0,rightBottomPointX=0,rightBottomPointY=0,
+                 serverInfo=None, factoryInfo=None, roomInfo=None):
         self.id = id
         self.factoryinfo = factoryInfo
         self.ipaddress = ipAddress
@@ -27,6 +29,11 @@ class CameraInfo:
         self.serverinfo = serverInfo
         self.roominfoid = roomInfoId
         self.roominfo = roomInfo
+        self.isUseSafeRegion=isUseSafeRegion
+        self.leftTopPointX=leftTopPointX
+        self.leftTopPointY=leftTopPointY
+        self.rightBottomPointX=rightBottomPointX
+        self.rightBottomPointY=rightBottomPointY
 
 
 class PoseInfo:
