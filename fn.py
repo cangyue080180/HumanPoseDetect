@@ -186,7 +186,8 @@ def vis_frame(frame, im_res, format='coco'):
         raise NotImplementedError
 
     im_name = im_res['imgname'].split('/')[-1]
-    img = frame
+    # img = frame
+    img = cv2.imread('background.jpg',cv2.IMREAD_COLOR)
     height,width = img.shape[:2]
     img = cv2.resize(img,(int(width/2), int(height/2)))
     for human in im_res['result']:
@@ -207,7 +208,7 @@ def vis_frame(frame, im_res, format='coco'):
             img = paint_chinese_opencv(img,'站',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
             #cv2.putText(img, 'stand', (int(xmin / 2) - 10, int(ymin / 2) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7,[255, 0, 255], 1)
         elif int(float(human['class'])) == 3:
-            img = paint_chinese_opencv(img,'地上',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
+            img = paint_chinese_opencv(img,'躺',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
         # else:
         #     img = paint_chinese_opencv(img,'其他',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
             #cv2.putText(img, 'other', (int(xmin / 2) - 10, int(ymin / 2) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7,[255, 0, 255], 1)

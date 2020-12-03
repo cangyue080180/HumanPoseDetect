@@ -126,7 +126,7 @@ def pose_detect_with_video(aged_id, classidx,human_box, parse_pose_demo_instance
     elif classidx == 2:
         now_status = PoseStatus.Stand.value
     elif classidx == 3:
-        now_status = PoseStatus.Down.value
+        now_status = PoseStatus.Lie.value
     else:
         now_status = PoseStatus.Other.value
 
@@ -153,8 +153,9 @@ def pose_detect_with_video(aged_id, classidx,human_box, parse_pose_demo_instance
         use_aged.isalarm = False
         # 判断当前状态是否需求报警
         if is_outer_chuang:
-            if now_status == PoseStatus.Down.value or now_status == PoseStatus.Lie.value:
+            if now_status == PoseStatus.Lie.value:
                 use_aged.isalarm = True
+                now_status = PoseStatus.Down.value
     else:
         if now_status == PoseStatus.Down.value:  # TODO：这里的给值是不对的，需要赋予识别服务的对应的需要报警的状态值
             use_aged.isalarm = True
