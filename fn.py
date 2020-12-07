@@ -197,22 +197,22 @@ def vis_frame(frame, im_res, format='coco'):
         bbox = human['bbox']
         #Draw class
         #xmin, ymin = torch.min(kp_preds[:, 0]), torch.min(kp_preds[:, 1])
-        xmin, ymin = bbox[0],bbox[1]
+        #xmin, ymin = bbox[0],bbox[1]
         #print(xmin,ymin)
-        if int(float(human['class']))==0:
-            img = paint_chinese_opencv(img,'坐',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
-            #cv2.putText(img,'sit',(int(xmin/2)-10,int(ymin/2)-10),cv2.FONT_HERSHEY_SIMPLEX, 0.7, [255, 0, 255], 1)
-        if int(float(human['class']))==1:
-            img = paint_chinese_opencv(img,'躺',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
-        elif int(float(human['class'])) == 2:
-            img = paint_chinese_opencv(img,'站',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
-            #cv2.putText(img, 'stand', (int(xmin / 2) - 10, int(ymin / 2) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7,[255, 0, 255], 1)
-        elif int(float(human['class'])) == 3:
-            img = paint_chinese_opencv(img,'躺',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
+        #if int(float(human['class']))==0:
+        #    img = paint_chinese_opencv(img,'坐',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
+        #    #cv2.putText(img,'sit',(int(xmin/2)-10,int(ymin/2)-10),cv2.FONT_HERSHEY_SIMPLEX, 0.7, [255, 0, 255], 1)
+        #if int(float(human['class']))==1:
+        #    img = paint_chinese_opencv(img,'躺',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
+        #elif int(float(human['class'])) == 2:
+        #    img = paint_chinese_opencv(img,'站',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
+        #    #cv2.putText(img, 'stand', (int(xmin / 2) - 10, int(ymin / 2) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7,[255, 0, 255], 1)
+        #elif int(float(human['class'])) == 3:
+        #    img = paint_chinese_opencv(img,'躺',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
         # else:
         #     img = paint_chinese_opencv(img,'其他',(int(xmin/2)-10,int(ymin/2)-20),35, (255, 0, 255))
             #cv2.putText(img, 'other', (int(xmin / 2) - 10, int(ymin / 2) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7,[255, 0, 255], 1)
-        cv2.rectangle(img,(int(bbox[0]/2),int(bbox[1]/2)),(int(bbox[2]/2),int(bbox[3]/2)),(255,255,0),2)
+        #cv2.rectangle(img,(int(bbox[0]/2),int(bbox[1]/2)),(int(bbox[2]/2),int(bbox[3]/2)),(255,255,0),2)
         #set box mask
         img[int(bbox[1]/2):int(bbox[3]/2),int(bbox[0]/2):int(bbox[2]/2)]=0
         kp_preds = torch.cat((kp_preds, torch.unsqueeze((kp_preds[5,:]+kp_preds[6,:])/2,0)))
